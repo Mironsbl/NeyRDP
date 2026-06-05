@@ -100,7 +100,8 @@ jobs:
           
           # Симуляция активности для обхода детекторов простоя
           for ($i = 1; $i -le 1000; $i++) {
-              Write-Host "[$(Get-Date)] Validation Step #$i: OK"
+              $date = Get-Date
+              Write-Host "[$date] Validation Step #$i: OK"
               # Пауза через ping имитирует сетевую задержку в тестах
               ping -n 300 127.0.0.1 > $null
           }
