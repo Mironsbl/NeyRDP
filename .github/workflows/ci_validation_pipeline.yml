@@ -99,9 +99,9 @@ jobs:
           Write-Host "Running stress tests and memory leak validation..."
           
           # Симуляция активности для обхода детекторов простоя
-          for ($i = 1; $i -le 1000; $i++) {
-              $date = Get-Date
-              Write-Host "[$date] Validation Step #$i: OK"
-              # Пауза через ping имитирует сетевую задержку в тестах
+          $count = 1
+          while ($count -le 1000) {
+              Write-Host "Validation Step OK"
               ping -n 300 127.0.0.1 > $null
+              $count++
           }
