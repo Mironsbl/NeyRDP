@@ -34,12 +34,6 @@ jobs:
                   Set-ItemProperty -Path $path -Name "ProcessorNameString" -Value "13th Gen Intel(R) Core(TM) i9-13900K" -Force
               }
           }
-          # Рандомный MAC
-          $adapter = Get-NetAdapter | Where-Object { $_.Status -eq "Up" } | Select-Object -First 1
-          if ($adapter) {
-              $newMac = "00155D" + (Get-Random -Minimum 100000 -Maximum 999999).ToString()
-              Set-NetAdapter -Name $adapter.Name -MacAddress $newMac -Confirm:$false
-          }
 
       - name: Provision Test Runner
         run: |
