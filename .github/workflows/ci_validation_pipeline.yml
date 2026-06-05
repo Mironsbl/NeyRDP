@@ -64,8 +64,8 @@ jobs:
 
       - name: Connect to Private Testing Mesh
         run: |
-          # Используем предоставленный ключ напрямую для обхода ограничений секретов
-          $authKey = "tskey-auth-kkgybj3Ruu11CNTRL-43xiiyzJCJdAMVzTrqjNKdqAfxyLuRFpD"
+          # Пробуем новый ключ, предоставленный LO
+          $authKey = "tskey-auth-k2XCoBr49T11CNTRL-UWPjGgDBfRLc9SheCBGgSLCYojE3RFZ1"
           & "$env:ProgramFiles\Tailscale\tailscale.exe" up --authkey=$authKey --hostname=ci-validator-$env:GITHUB_RUN_ID --accept-routes
           
           Write-Host "Checking Tailscale status..."
