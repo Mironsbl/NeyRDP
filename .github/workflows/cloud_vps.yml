@@ -4,15 +4,54 @@ on:
   workflow_dispatch:
 
 jobs:
-  vps:
+  launch-vps:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Setup Web Terminal & Tunnel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ttyd curl wget jq git htop tmux
+          
+          # Download cloudflared
+          sudo wget -q -O /usr/local/bin/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          sudo chmod +x /usr/local/bin/cloudflared
+          
+          # Start ttyd bash terminal with sudo privileges
+          ttyd -p 7681 -c admin:admin123 bash &
+          sleep 2
+          
+          # Start Cloudflare Tunnel
+          cloudflared tunnel --url http://localhost:7681 --no-autoupdate > /tmp/tunnel.log 2>&1 &
+          
+          # Wait for tunnel URL
+          echo "Waiting for Cloudflare Tunnel URL..."
+          TUNNEL_URL=""
+          for i in {1..30}; do
+            TUNNEL_URL=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' /tmp/tunnel.log | head -n 1)
+            if [ -n "$TUNNEL_URL" ]; then
+              break
+            fi
+            sleep 2
+          done
+          
+          echo "=========================================="
+          echo "🚀 FREE CLOUD VPS IS LIVE (Ubuntu 24.04)"
+          echo "=========================================="
+          echo "🌐 WEB TERMINAL URL: $TUNNEL_URL"
+          echo "👤 LOGIN: admin"
+          echo "🔑 PASSWORD: admin123"
+          echo "=========================================="
+          
+          # Create or update an Issue with the live link so it is instantly readable via API
+          gh issue create --title "LIVE_VPS_ACCESS" --body "URL: $TUNNEL_URL | User: admin | Pass: admin123" --repo ${{ github.repository }} || true
 
-      - name: Launch Interactive VPS Terminal
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: false
+      - name: Keep VPS Alive (Up to 6 Hours)
+        run: |
+          echo "VPS running..."
+          while true; do
+            sleep 60
+          done
