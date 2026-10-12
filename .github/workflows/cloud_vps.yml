@@ -1,0 +1,49 @@
+name: Cloud Linux VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  launch-vps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Setup System & Tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y tmate curl wget jq git htop tmux
+          
+      - name: Start VPS Terminal Bridge
+        run: |
+          # Generate new SSH keys if needed
+          [ -f ~/.ssh/id_rsa ] || ssh-keygen -t rsa -f ~/.ssh/id_rsa -N ""
+          
+          # Start tmate session
+          tmate -S /tmp/tmate.sock new-session -d
+          tmate -S /tmp/tmate.sock wait tmate-ready
+          
+          # Extract SSH connection & Web Terminal
+          SSH_CMD=$(tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}')
+          WEB_URL=$(tmate -S /tmp/tmate.sock display -p '#{tmate_web}')
+          
+          echo "=========================================="
+          echo "🚀 FREE CLOUD VPS IS LIVE (Ubuntu 24.04)"
+          echo "=========================================="
+          echo "🌐 WEB TERMINAL URL: $WEB_URL"
+          echo "🔑 SSH COMMAND:      $SSH_CMD"
+          echo "=========================================="
+          
+          # Add to GitHub Job Summary
+          echo "## 🚀 Cloud Linux VPS is Ready" >> $GITHUB_STEP_SUMMARY
+          echo "- **Web Terminal**: [$WEB_URL]($WEB_URL)" >> $GITHUB_STEP_SUMMARY
+          echo "- **SSH Command**: \`$SSH_CMD\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Specifications**: 4 vCPU, 16 GB RAM, 75 GB SSD (Ubuntu 24.04)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Root / Sudo**: Full passwordless sudo enabled" >> $GITHUB_STEP_SUMMARY
+
+      - name: Keep VPS Alive (Up to 6 Hours)
+        run: |
+          echo "VPS is running. To exit, terminate the session in terminal."
+          while true; do
+            sleep 60
+          done
