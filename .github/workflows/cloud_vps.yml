@@ -24,8 +24,11 @@ jobs:
           sudo wget -q -O /usr/local/bin/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
           sudo chmod +x /usr/local/bin/cloudflared
           
-          # Start ttyd bash terminal with password
-          ttyd -p 7681 -c admin:admin123 bash &
+          # Allow runner passwordless sudo for everything
+          echo "runner ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
+          
+          # Start ttyd with -W (writable) dropping straight into bash
+          ttyd -p 7681 -W -c admin:admin123 bash &
           sleep 2
           
           # Start Cloudflare Tunnel
