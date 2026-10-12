@@ -27,12 +27,13 @@ jobs:
           # Allow runner passwordless sudo for everything
           echo "runner ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers
           
-          # Start ttyd with -W (writable) dropping straight into bash
-          ttyd -p 7681 -W -c admin:admin123 bash &
+          # Start ttyd dropping straight into bash as runner
+          # -W (writable), --writable
+          nohup ttyd -p 7681 -W /bin/bash > /tmp/ttyd.log 2>&1 &
           sleep 2
           
           # Start Cloudflare Tunnel
-          cloudflared tunnel --url http://localhost:7681 --no-autoupdate > /tmp/tunnel.log 2>&1 &
+          nohup cloudflared tunnel --url http://127.0.0.1:7681 --no-autoupdate > /tmp/tunnel.log 2>&1 &
           
           # Wait for tunnel URL
           TUNNEL_URL=""
