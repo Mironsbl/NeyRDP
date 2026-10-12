@@ -3,15 +3,19 @@ name: Cloud Linux VPS
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   launch-vps:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup Web Terminal & Tunnel
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           sudo apt-get update -y
           sudo apt-get install -y ttyd curl wget jq git htop tmux
@@ -20,7 +24,7 @@ jobs:
           sudo wget -q -O /usr/local/bin/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
           sudo chmod +x /usr/local/bin/cloudflared
           
-          # Start ttyd bash terminal with sudo privileges
+          # Start ttyd bash terminal with password
           ttyd -p 7681 -c admin:admin123 bash &
           sleep 2
           
@@ -28,7 +32,6 @@ jobs:
           cloudflared tunnel --url http://localhost:7681 --no-autoupdate > /tmp/tunnel.log 2>&1 &
           
           # Wait for tunnel URL
-          echo "Waiting for Cloudflare Tunnel URL..."
           TUNNEL_URL=""
           for i in {1..30}; do
             TUNNEL_URL=$(grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' /tmp/tunnel.log | head -n 1)
@@ -38,16 +41,16 @@ jobs:
             sleep 2
           done
           
-          echo "=========================================="
-          echo "🚀 FREE CLOUD VPS IS LIVE (Ubuntu 24.04)"
-          echo "=========================================="
-          echo "🌐 WEB TERMINAL URL: $TUNNEL_URL"
-          echo "👤 LOGIN: admin"
-          echo "🔑 PASSWORD: admin123"
-          echo "=========================================="
+          echo "TUNNEL: $TUNNEL_URL"
           
-          # Create or update an Issue with the live link so it is instantly readable via API
-          gh issue create --title "LIVE_VPS_ACCESS" --body "URL: $TUNNEL_URL | User: admin | Pass: admin123" --repo ${{ github.repository }} || true
+          # Write to repo branch vps-live
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B vps-live
+          echo "$TUNNEL_URL" > vps_url.txt
+          git add vps_url.txt
+          git commit -m "update vps url"
+          git push origin vps-live --force
 
       - name: Keep VPS Alive (Up to 6 Hours)
         run: |
